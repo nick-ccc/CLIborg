@@ -636,7 +636,7 @@ func Push(remote string, ref string) (bool, error) {
 	_, err := run.PrepareCmd(pushCmd).Output()
 	if err == nil {
 		// Remote Branch
-		fmt.Println("Successfully Pushed, %s:%s", remote, ref)
+		fmt.Printf("Successfully Pushed, %s:%s\n", remote, ref)
 		return true, nil
 	}
 
