@@ -568,7 +568,7 @@ func Commit(message string) (bool, error) {
 	output, err := run.PrepareCmd(commitCMD).Output()
 	if err == nil {
 		// Remote Branch
-		fmt.Println(firstLine(output))
+		fmt.Println(outputLines(output))
 		return true, nil
 	}
 
@@ -591,7 +591,7 @@ func StageAndCommitTracked(message string) (bool, error) {
 	output, err := run.PrepareCmd(commitCMD).Output()
 	if err == nil {
 		// Remote Branch
-		fmt.Println(firstLine(output))
+		fmt.Println(outputLines(output))
 		return true, nil
 	}
 
@@ -612,7 +612,7 @@ func TagRepository(tagName string) (bool, error) {
 	output, err := run.PrepareCmd(tagCMD).Output()
 	if err == nil {
 		// Remote Branch
-		fmt.Println(firstLine(output))
+		fmt.Println(outputLines(output))
 		return true, nil
 	}
 
@@ -636,7 +636,7 @@ func Push(remote string, ref string) (bool, error) {
 	output, err := run.PrepareCmd(pushCmd).Output()
 	if err == nil {
 		// Remote Branch
-		fmt.Println(firstLine(output))
+		fmt.Println(outputLines(output))
 		return true, nil
 	}
 
