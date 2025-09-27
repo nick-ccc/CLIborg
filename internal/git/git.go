@@ -1,6 +1,6 @@
 package git
 
-// Code adapted from glab (https://gitlab.com/gitlab-org/cli)
+// Code modified from glab (https://gitlab.com/gitlab-org/cli)
 // Original source licensed under the MIT License:
 // Copyright (c) 2020 GitLab
 
@@ -170,8 +170,8 @@ func GitUserEmail() (string, error) {
 	return "", nil
 }
 
-func CommitBody(sha string) (string, error) {
-	showCmd := GitCommand("-c", "log.ShowSignature=false", "show", "-s", "--pretty=format:%b", sha)
+func CommitBody() (string, error) {
+	showCmd := GitCommand("-c", "log.ShowSignature=false", "show", "-s")
 	output, err := run.PrepareCmd(showCmd).Output()
 	if err != nil {
 		return "", err
@@ -185,45 +185,6 @@ func SetUpstream(remote string, branch string, cmdOut, cmdErr io.Writer) error {
 	setCmd.Stdout = cmdOut
 	setCmd.Stderr = cmdErr
 	return run.PrepareCmd(setCmd).Run()
-}
-
-type BranchConfig struct {
-	RemoteName string
-	RemoteURL  *url.URL
-	MergeRef   string
-}
-
-// ReadBranchConfig parses the `branch.BRANCH.(remote|merge)` part of git config
-func ReadBranchConfig(branch string) BranchConfig {
-	prefix := regexp.QuoteMeta(fmt.Sprintf("branch.%s.", branch))
-	configCmd := GitCommand("config", "--get-regexp", fmt.Sprintf("^%s(remote|merge)$", prefix))
-	output, err := run.PrepareCmd(configCmd).Output()
-	if err != nil {
-		return BranchConfig{}
-	}
-	cfg := BranchConfig{}
-	for _, line := range outputLines(output) {
-		parts := strings.SplitN(line, " ", 2)
-		if len(parts) < 2 {
-			continue
-		}
-		keys := strings.Split(parts[0], ".")
-		switch keys[len(keys)-1] {
-		case "remote":
-			if strings.Contains(parts[1], ":") {
-				u, err := ParseURL(parts[1])
-				if err != nil {
-					continue
-				}
-				cfg.RemoteURL = u
-			} else if !isFilesystemPath(parts[1]) {
-				cfg.RemoteName = parts[1]
-			}
-		case "merge":
-			cfg.MergeRef = parts[1]
-		}
-	}
-	return cfg
 }
 
 func DeleteLocalBranch(branch string) error {
@@ -277,10 +238,6 @@ func AddUpstreamRemote(upstreamURL, cloneDir string) error {
 	cloneCmd.Stdout = os.Stdout
 	cloneCmd.Stderr = os.Stderr
 	return run.PrepareCmd(cloneCmd).Run()
-}
-
-func isFilesystemPath(p string) bool {
-	return p == "." || strings.HasPrefix(p, "./") || strings.HasPrefix(p, "/")
 }
 
 // ToplevelDir returns the top-level directory path of the current repository
@@ -562,7 +519,10 @@ func StageFilesForCommit(files []string) (bool, error) {
 }
 
 // Commits staged changes T/F
-func Commit(message string) (bool, error) {
+func Commit(message string, noCI bool) (bool, error) {
+	if noCI {
+		message = message + " [no CI]"
+	}
 
 	commitCMD := GitCommand("commit", "-m", message)
 	output, err := run.PrepareCmd(commitCMD).Output()
@@ -607,6 +567,7 @@ func StageAndCommitTracked(message string) (bool, error) {
 	return false, err
 }
 
+// Tag repository
 func TagRepository(tagName string) (bool, error) {
 	tagCMD := GitCommand("tag", tagName)
 	output, err := run.PrepareCmd(tagCMD).Output()
@@ -650,4 +611,24 @@ func Push(remote string, ref string) (bool, error) {
 
 	// Unknown error
 	return false, err
+}
+
+func LogChanges() ([]string, error) {
+	refCmd := GitCommand("log", "--oneline", "--decorate", "--color")
+	output, err := run.PrepareCmd(refCmd).Output()
+	if err == nil {
+		// Found the branch name
+		return outputLines(output), nil
+	}
+
+	var cmdErr *run.CmdError
+	if errors.As(err, &cmdErr) {
+		if cmdErr.Stderr.Len() == 0 {
+			// Detached head
+			return []string{}, ErrNotOnAnyBranch
+		}
+	}
+
+	// Unknown error
+	return []string{}, err
 }
