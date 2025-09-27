@@ -633,10 +633,10 @@ func TagRepository(tagName string) (bool, error) {
 func Push(remote string, ref string) (bool, error) {
 	pushCmd := GitCommand("push", remote, ref)
 
-	output, err := run.PrepareCmd(pushCmd).Output()
+	_, err := run.PrepareCmd(pushCmd).Output()
 	if err == nil {
 		// Remote Branch
-		fmt.Println(outputLines(output))
+		fmt.Println("Successfully Pushed, %s:%s", remote, ref)
 		return true, nil
 	}
 
