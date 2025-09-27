@@ -565,9 +565,10 @@ func StageFilesForCommit(files []string) (bool, error) {
 func Commit(message string) (bool, error) {
 
 	commitCMD := GitCommand("commit", "-m", message)
-	_, err := run.PrepareCmd(commitCMD).Output()
+	output, err := run.PrepareCmd(commitCMD).Output()
 	if err == nil {
 		// Remote Branch
+		fmt.Println(firstLine(output))
 		return true, nil
 	}
 
@@ -587,9 +588,10 @@ func Commit(message string) (bool, error) {
 func StageAndCommitTracked(message string) (bool, error) {
 
 	commitCMD := GitCommand("commit", "-am", message)
-	_, err := run.PrepareCmd(commitCMD).Output()
+	output, err := run.PrepareCmd(commitCMD).Output()
 	if err == nil {
 		// Remote Branch
+		fmt.Println(firstLine(output))
 		return true, nil
 	}
 
@@ -607,9 +609,10 @@ func StageAndCommitTracked(message string) (bool, error) {
 
 func TagRepository(tagName string) (bool, error) {
 	tagCMD := GitCommand("tag", tagName)
-	_, err := run.PrepareCmd(tagCMD).Output()
+	output, err := run.PrepareCmd(tagCMD).Output()
 	if err == nil {
 		// Remote Branch
+		fmt.Println(firstLine(output))
 		return true, nil
 	}
 
@@ -630,9 +633,10 @@ func TagRepository(tagName string) (bool, error) {
 func Push(remote string, ref string) (bool, error) {
 	pushCmd := GitCommand("push", remote, ref)
 
-	_, err := run.PrepareCmd(pushCmd).Output()
+	output, err := run.PrepareCmd(pushCmd).Output()
 	if err == nil {
 		// Remote Branch
+		fmt.Println(firstLine(output))
 		return true, nil
 	}
 
