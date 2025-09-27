@@ -26,6 +26,9 @@ const DefaultRemote = "origin"
 
 // ErrNotOnAnyBranch indicates that the user is in detached HEAD state
 var ErrNotOnAnyBranch = errors.New("you're not on any Git branch (a 'detached HEAD' state)")
+var ErrCommitFailed = errors.New("unable to commit files")
+var ErrTagFailed = errors.New("unable to tag repository")
+var ErrPushFailed = errors.New("unable to push")
 
 // Basic Git Command - accepts args
 var GitCommand = func(args ...string) *exec.Cmd {
@@ -76,26 +79,26 @@ func CurrentBranch() (string, error) {
 	return "", err
 }
 
-// GetDefaultBranch finds and returns the remote's default branch
-func RemoteBranchExists(branch string) (string, error) {
+// Checks if branch exists and returns T/F
+func RemoteBranchExists(branch string) (bool, error) {
 	refCmd := GitCommand("ls-remote", "--exit-code", "--heads", DefaultRemote, branch)
 
-	output, err := run.PrepareCmd(refCmd).Output()
+	_, err := run.PrepareCmd(refCmd).Output()
 	if err == nil {
 		// Remote Branch
-		return firstLine(output), nil
+		return true, nil
 	}
 
 	var cmdErr *run.CmdError
 	if errors.As(err, &cmdErr) {
 		if cmdErr.Stderr.Len() == 0 {
 			// Detached head
-			return "", ErrNotOnAnyBranch
+			return false, ErrNotOnAnyBranch
 		}
 	}
 
 	// Unknown error
-	return "", err
+	return false, err
 }
 
 func ParseDefaultBranch(output []byte) (string, error) {
@@ -146,60 +149,25 @@ func UncommittedChangeCount() (int, error) {
 	return count, nil
 }
 
-func GitUserName() ([]byte, error) {
+func GitUserName() (string, error) {
 	nameGrab := GitCommand("config", "user.name")
 	output, err := run.PrepareCmd(nameGrab).Output()
-	if err != nil {
-		return []byte{}, err
+	if err == nil {
+		// Found the branch name
+		return firstLine(output), nil
 	}
 
-	return output, nil
+	return "", nil
 }
 
-func GitUserEmail() ([]byte, error) {
+func GitUserEmail() (string, error) {
 	nameGrab := GitCommand("config", "user.email")
 	output, err := run.PrepareCmd(nameGrab).Output()
-	if err != nil {
-		return []byte{}, err
+	if err == nil {
+		// Found the branch name
+		return firstLine(output), nil
 	}
-
-	return output, nil
-}
-
-type Commit struct {
-	Sha   string
-	Title string
-}
-
-func Commits(baseRef, headRef string) ([]*Commit, error) {
-	logCmd := GitCommand(
-		"-c", "log.ShowSignature=false",
-		"log", "--pretty=format:%H,%s",
-		"--cherry", fmt.Sprintf("%s...%s", baseRef, headRef))
-	output, err := run.PrepareCmd(logCmd).Output()
-	if err != nil {
-		return []*Commit{}, err
-	}
-
-	var commits []*Commit
-	sha := 0
-	title := 1
-	for _, line := range outputLines(output) {
-		split := strings.SplitN(line, ",", 2)
-		if len(split) != 2 {
-			continue
-		}
-		commits = append(commits, &Commit{
-			Sha:   split[sha],
-			Title: split[title],
-		})
-	}
-
-	if len(commits) == 0 {
-		return commits, fmt.Errorf("could not find any commits between %s and %s", baseRef, headRef)
-	}
-
-	return commits, nil
+	return "", nil
 }
 
 func CommitBody(sha string) (string, error) {
@@ -209,14 +177,6 @@ func CommitBody(sha string) (string, error) {
 		return "", err
 	}
 	return string(output), nil
-}
-
-// Push publishes a git ref to a remote
-func Push(remote string, ref string, cmdOut, cmdErr io.Writer) error {
-	pushCmd := GitCommand("push", remote, ref)
-	pushCmd.Stdout = cmdOut
-	pushCmd.Stderr = cmdErr
-	return run.PrepareCmd(pushCmd).Run()
 }
 
 // SetUpstream sets the upstream (tracking) of a branch
@@ -276,7 +236,7 @@ func DeleteLocalBranch(branch string) error {
 }
 
 func CheckoutBranch(branch string) error {
-	branchCMD := GitCommand("checkout", "-b", branch)
+	branchCMD := GitCommand("checkout", branch)
 	err := run.PrepareCmd(branchCMD).Run()
 	if err != nil {
 		return fmt.Errorf("could not checkout branch: %w", err)
@@ -575,4 +535,115 @@ func ListTags() ([]string, error) {
 	}
 
 	return strings.Fields(tagsStr), nil
+}
+
+// Checks if branch exists and returns T/F
+func StageFilesForCommit(files []string) (bool, error) {
+
+	commitArgs := append([]string{"add"}, files...)
+
+	cloneCmd := GitCommand(commitArgs...)
+	_, err := run.PrepareCmd(cloneCmd).Output()
+	if err == nil {
+		// Remote Branch
+		return true, nil
+	}
+
+	var cmdErr *run.CmdError
+	if errors.As(err, &cmdErr) {
+		if cmdErr.Stderr.Len() == 0 {
+			// Detached head
+			return false, ErrCommitFailed
+		}
+	}
+
+	// Unknown error
+	return false, err
+}
+
+// Commits staged changes T/F
+func Commit(message string) (bool, error) {
+
+	commitCMD := GitCommand("commit", "-m", message)
+	_, err := run.PrepareCmd(commitCMD).Output()
+	if err == nil {
+		// Remote Branch
+		return true, nil
+	}
+
+	var cmdErr *run.CmdError
+	if errors.As(err, &cmdErr) {
+		if cmdErr.Stderr.Len() == 0 {
+			// Detached head
+			return false, ErrCommitFailed
+		}
+	}
+
+	// Unknown error
+	return false, err
+}
+
+// Commits and stages all tracked files T/F
+func StageAndCommitTracked(message string) (bool, error) {
+
+	commitCMD := GitCommand("commit", "-am", message)
+	_, err := run.PrepareCmd(commitCMD).Output()
+	if err == nil {
+		// Remote Branch
+		return true, nil
+	}
+
+	var cmdErr *run.CmdError
+	if errors.As(err, &cmdErr) {
+		if cmdErr.Stderr.Len() == 0 {
+			// Detached head
+			return false, ErrCommitFailed
+		}
+	}
+
+	// Unknown error
+	return false, err
+}
+
+func TagRepository(tagName string) (bool, error) {
+	tagCMD := GitCommand("tag", tagName)
+	_, err := run.PrepareCmd(tagCMD).Output()
+	if err == nil {
+		// Remote Branch
+		return true, nil
+	}
+
+	var cmdErr *run.CmdError
+	if errors.As(err, &cmdErr) {
+		if cmdErr.Stderr.Len() == 0 {
+			// Detached head
+			return false, ErrTagFailed
+		}
+	}
+
+	// Unknown error
+	return false, err
+
+}
+
+// Push publishes a git ref to a remote
+func Push(remote string, ref string) (bool, error) {
+	pushCmd := GitCommand("push", remote, ref)
+
+	_, err := run.PrepareCmd(pushCmd).Output()
+	if err == nil {
+		// Remote Branch
+		return true, nil
+	}
+
+	var cmdErr *run.CmdError
+	if errors.As(err, &cmdErr) {
+		if cmdErr.Stderr.Len() == 0 {
+			// Detached head
+			return false, ErrPushFailed
+		}
+	}
+
+	// Unknown error
+	return false, err
 }
