@@ -8,13 +8,24 @@
   <style>
 
     .container {
-      max-width: 700px;
-      margin: auto;
-      background: white;
-      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-      border-radius: 8px;
-      padding: 2rem;
+    max-width: 700px;
+    margin: auto;
+    background: white;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    border-radius: 8px;
+    padding: 2rem;
     }
+
+    .early-changelog-wrapper {
+      border: 6px solid rgba(255, 255, 255, 0.41); /* Transparent border */
+      border-radius: 12px;
+      padding: 1rem;
+      margin-top: 2rem;
+      background: rgba(255, 255, 255, 0); /* Optional: soft background */
+      backdrop-filter: blur(2px);           /* Optional: adds a frosted glass effect */
+    }
+
+
 
     .logo {
       text-align: center;
@@ -47,19 +58,19 @@
     background: linear-gradient(to right, #0273a4ff, transparent);
     }
     .changed h2 {
-    background: linear-gradient(to right, #00857cff, transparent);
+    background: linear-gradient(to right, #0273a4ff, transparent);
     }
     .fixed h2 {
-    background: linear-gradient(to right, #006e4fff, transparent);
+    background: linear-gradient(to right, #0273a4ff, transparent);
     }
     .removed h2 {
-    background: linear-gradient(to right, #9e1010ff, transparent);
+    background: linear-gradient(to right, #0273a4ff, transparent);
     }
     .deprecated h2 {
-    background: linear-gradient(to right, #9b59b6, transparent);
+    background: linear-gradient(to right, #0273a4ff, transparent);
     }
     .security h2 {
-    background: linear-gradient(to right, #7d22e6ff, transparent);
+    background: linear-gradient(to right, #0273a4ff, transparent);
     }
 
 
@@ -82,47 +93,49 @@
     </div>
     <h1>[INSERT_VERSION_HERE] - INSERT_DATE_SRC_HERE</h1>
 
-<div class="section added">
-  <h2>➕ Added</h2>
-  <ul>
-    <li></li>
-  </ul>
-</div>
-
-<div class="section changed">
-  <h2>🛠 Changed</h2>
-  <ul>
-    <li></li>
-  </ul>
-</div>
-
-<div class="section fixed">
-  <h2>🧰 Fixed</h2>
-  <ul>
-    <li></li>
-  </ul>
-</div>
-
-<div class="section removed">
-  <h2>🗑 Removed</h2>
-  <ul>
-    <li></li>
-  </ul>
-</div>
-
-<div class="section deprecated">
-  <h2>⚠️ Deprecated</h2>
-  <ul>
-    <li></li>
-  </ul>
-</div>
-
-<div class="section security">
-  <h2>🛡 Security</h2>
-  <ul>
-    <li></li>
-  </ul>
-</div>
+<div class="early-changelog-wrapper">
+  <div class="section added">
+    <h2>Added</h2>
+    <ul>
+      <li></li>
+    </ul>
   </div>
+
+  <div class="section changed">
+    <h2>Changed</h2>
+    <ul>
+      <li></li>
+    </ul>
+  </div>
+
+  <div class="section fixed">
+    <h2>Fixed</h2>
+    <ul>
+      <li></li>
+    </ul>
+  </div>
+
+  <div class="section removed">
+    <h2> Removed</h2>
+    <ul>
+      <li></li>
+    </ul>
+  </div>
+
+  <div class="section deprecated">
+    <h2>Deprecated</h2>
+    <ul>
+      <li></li>
+    </ul>
+  </div>
+
+  <div class="section security">
+    <h2>Security</h2>
+    <ul>
+      <li></li>
+    </ul>
+  </div>
+  </div>
+</div>
 </body>
 </html>
