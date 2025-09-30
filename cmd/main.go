@@ -15,16 +15,17 @@ func main() {
 
 	// fmt.Println(m)
 
-	_ = repository.CreateChangelog(
-		"changelogs/CHANGELOG-v0.1.0.md",
-		"v0.1.0",
-		"",
-	)
-	// err = repository.ConsolidateChangelog(
-	// 	"/git/CLIborg/changelogs/CHANGELOG-v0.1.0.md",
+	// _ = repository.CreateChangelog(
+	// 	"changelogs/CHANGELOG-v0.1.0.md",
+	// 	"v0.1.0",
+	// 	"",
+	// 	"https://go.dev/blog/go-brand/Go-Logo/SVG/Go-Logo_Aqua.svg",
 	// )
+	err = repository.ConsolidateChangelog(
+		"/git/CLIborg/changelogs/CHANGELOG-v0.1.0.md",
+	)
 
-	// if err != nil {
-	// 	log.Fatalf("Error: %v", err)
-	// }
+	if err != nil {
+		log.Fatalf("Error: %v", err)
+	}
 }
